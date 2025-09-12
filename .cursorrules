@@ -1,0 +1,462 @@
+# Table of Contents
+TABLE_OF_CONTENTS: |
+  1. Project Context and Architecture
+  2. File Management Rules
+  3. Code Style and Patterns
+  4. Architecture Understanding
+  5. Task Management
+  6. Error Prevention and Handling
+  7. Performance Guidelines
+  8. Testing Framework and Patterns
+  9. Security Guidelines
+  10. Logging Guidelines
+  11. Code Review Guidelines
+  12. Environment and Configuration
+  13. Database Guidelines
+  14. API Guidelines
+  15. Scraper-Specific Guidelines
+  16. Data Processing Guidelines
+  17. Monitoring and Observability
+  18. Deployment and Operations
+  19. Quick Reference
+  20. Common Patterns
+  21. Debugging Guidelines
+  22. Code Quality Guidelines
+  23. Data Quality Guidelines
+  24. Success Metrics
+  25. Troubleshooting
+
+# Project Context and Architecture
+SYSTEM_CONTEXT: |
+  This document is specifically to be clear for the purposes of you reading it and understanding it and being successful.
+  You are a senior developer working on a TypeScript/Node.js project.
+
+PROJECT_SPECIFIC_CONTEXT: |
+  The project is data collection engine that uses web scrapers, public APIs and other data sources to news and government related data.
+  The data being collected will be parsed, cleaned, and shaped, and stored in a database.
+  The database will be used to power a web application that will allow users manipulate and explore the data to gain fascinating insights.
+
+
+# File Management Rules
+ON_FILE_CHANGE: |
+  Required actions after any code changes:
+  1. VALIDATE changes against docs/architecture.mermaid (architectural compliance)
+  2. VALIDATE changes against docs/technical.md (technical specifications)
+  3. UPDATE docs/status.md with:
+    - Current progress
+    - Any new issues encountered
+    - Completed items
+  4. VERIFY task progress against tasks/tasks.md
+  - **Timing:** Perform these actions immediately after each code change
+  - **If validation fails:** Fix issues before proceeding
+
+# Code Style and Patterns
+TYPESCRIPT_GUIDELINES: |
+  - Use strict typing, avoid 'any'
+  - Follow SOLID principles
+  - Write unit tests for all public methods
+  - Document with TSDoc
+  - If guidelines aren't followed: Fix before proceeding
+  - If guidelines can't be followed: Document why and get approval
+
+CODE_ORGANIZATION: |
+  File Naming:
+  - Use kebab-case for files: "user-service.ts"
+  - Use PascalCase for classes: "UserService"
+  - Use camelCase for functions: "getUserById"
+
+  Import/Export:
+  - Use named exports for utilities
+  - Use default exports for main classes
+  - Group imports: external libs, internal modules, types
+
+# Architecture Understanding
+READ_ARCHITECTURE: |
+  File: docs/architecture.mermaid
+  Required parsing:
+  1. Load and parse complete Mermaid diagram
+  2. Extract and understand:
+     - Module boundaries and relationships
+     - Data flow patterns
+     - System interfaces
+     - Component dependencies
+  3. Validate any changes against architectural constraints
+  4. Ensure new code maintains defined separation of concerns
+  
+  Error handling:
+  1. If file not found: STOP and notify user
+  2. If diagram parse fails: REQUEST clarification
+  3. If architectural violation detected: WARN user
+  - **After parsing:** Use architectural understanding to guide implementation
+  - **If blocked:** Document blocker and ask for help
+
+# Task Management
+TASK_WORKFLOW: |
+  Required files:
+  - tasks/tasks.md: Source of task definitions
+  - docs/status.md: Progress tracking
+  - docs/technical.md: Implementation guidelines
+
+  If any file is missing or corrupted: STOP and notify user
+  
+  Workflow steps:
+  1. READ tasks/tasks.md:
+   - Parse current task requirements
+   - Extract acceptance criteria
+   - Identify dependencies
+   - If requirements are unclear: STOP and ask for clarification
+  
+  2. VALIDATE against docs/architecture.mermaid:
+   - Confirm architectural alignment
+   - Check component interactions
+   - If architectural conflict: STOP and notify user
+  
+  3. UPDATE docs/status.md:
+   - Mark task as in-progress
+   - Track completion of sub-tasks
+   - Document any blockers
+   - **Timing:** Update status at the start of each task and after major milestones
+  
+  4. IMPLEMENT following TDD:
+    - Read, understand, and process each requirement, feature, or bug request
+    - Break down complex requirements into smaller, testable units
+    - **Each unit should be testable in isolation** (no external dependencies)
+    - If requirements are too complex: Ask for clarification or break down further
+    
+    **RED Phase:**
+    - Write unit tests that describe the desired behavior
+    - Run the tests to confirm they fail (this validates the tests are meaningful and not false positives)
+    - If tests pass unexpectedly: Review test logic, fix tests, then run again
+    - If can't write meaningful tests: Ask for clarification or break down requirement further
+    - RED Phase ends when tests fail as expected (confirming they test something meaningful)
+    **GREEN Phase:**
+    - Write and implement code to make the unit tests pass
+    - Focus on making tests pass, not on perfect code (that comes in BLUE phase)
+    - Run the full test suite
+    - If ANY test fails:
+      - Implementation bug? → Fix the code, then run tests again
+      - Test bug/incorrect expectation? → STOP and notify user
+      - Repeat this process until ALL tests pass
+      - **Each iteration:** Fix one issue, run tests, verify progress
+      - **If stuck in loop:** Ask for help after 3 iterations
+    - **CRITICAL: Only when ALL tests pass:** Move to BLUE Phase
+    - **NEVER move to BLUE phase with failing tests** (this is a critical rule)
+    - **If unsure:** Run `npm test` to verify all tests pass before proceeding
+
+    **BLUE Phase:**
+    - Refactor and optimize the working code
+    - Run all tests after refactoring
+    - If ANY test fails: Return to GREEN Phase
+    - If all tests pass: BLUE Phase complete, update status.md, move to next requirement
+    - **Mark current requirement as completed** in status.md before moving on
+
+# Error Prevention 
+VALIDATION_RULES: |
+  1. Verify type consistency
+  2. Check for potential null/undefined
+  3. Validate against business rules
+  4. Ensure error handling
+
+# Error Handling 
+ERROR_HANDLING: |
+  Error Types:
+  - ValidationError: Input validation failures
+  - NetworkError: API/network failures
+  - BusinessLogicError: Domain rule violations
+  - SystemError: Unexpected system failures
+  
+  Error Response:
+  - Always include error code and message
+  - Log errors with context
+  - Return user-friendly messages
+
+# Performance Guidelines
+PERFORMANCE_GUIDELINES: |
+  - Use async/await for I/O operations
+  - Implement proper caching strategies
+  - Monitor memory usage in long-running processes
+  - Use connection pooling for database operations
+  - Implement rate limiting for external APIs
+
+# Testing Framework and Patterns
+TESTING_FRAMEWORK: |
+  Framework: Jest
+  Language: TypeScript
+  Style: TDD
+  Goal: Fast & deterministic unit tests, ethical & rate-limit–safe integration tests
+
+TEST_ORGANIZATION: |
+  Naming Conventions:
+  - Unit: "*.spec.ts"
+  - Integration: "*.int.spec.ts"
+  - End-to-end: "*.e2e.spec.ts"
+  - Contract: "*.contract.spec.ts"
+  - Snapshots: "__snapshots__/*.snap"
+
+  Directory Structure:
+  - src: "/src"
+  - tests/unit: "/tests/unit"
+  - tests/integration: "/tests/integration"
+  - tests/e2e: "/tests/e2e"
+  - tests/contracts: "/tests/contracts"
+  - tests/fixtures: "/tests/fixtures"
+  - tests/factories: "/tests/factories"
+  - tests/utils: "/tests/utils"
+
+MOCKING_STRATEGIES: |
+  General:
+  - Prefer dependency injection
+  - Use jest.mock sparingly for 3rd-party libs
+  
+  Network Testing:
+  - Unit: No real network. Stub or DI only.
+  - Integration: Use nock, Polly.js, or MSW for controlled responses
+  - E2E: Optionally run against real API in CI (behind feature flag)
+  - Must guard secrets. Do not commit API keys. Respect rate limits.
+
+COVERAGE_REQUIREMENTS: |
+  Thresholds:
+  - Lines: 90%
+  - Statements: 90%
+  - Functions: 90%
+  - Branches: 85%
+  
+  Include: "/src/**/*.ts"
+  Exclude: "/src/index.ts", "/src/types/", "**/*.d.ts", "/node_modules/"
+
+RECOMMENDED_LIBRARIES: |
+  Unit: jest, ts-jest, @testing-library/dom
+  Integration: nock, @pollyjs/core
+  E2E: execa, tmp
+  API Specific: msw, dotenv-safe
+
+# CI PR Checklist
+CI_PR_CHECKLIST: >
+  - [ ] Tests exist for new or changed behavior.
+  - [ ] No real network calls in unit tests.
+  - [ ] Sanitized fixtures are committed.
+  - [ ] Coverage thresholds (≥90% / ≥85% branches) are met.
+  - [ ] Snapshots are small, stable, and reviewed.
+  - [ ] Test names describe behavior clearly.  
+
+# Security Guidelines
+SECURITY_GUIDELINES: |
+  - Never commit API keys or secrets
+  - Use environment variables for sensitive data
+  - Validate all inputs
+  - Implement proper authentication/authorization
+  - Use HTTPS for all external communications
+  - Sanitize data before logging
+
+# Logging Guidelines
+LOGGING_GUIDELINES: |
+  - Use structured logging (JSON format)
+  - Include correlation IDs for tracing
+  - Log at appropriate levels (ERROR, WARN, INFO, DEBUG)
+  - Never log sensitive data (PII, passwords, API keys)
+  - Use consistent log message format
+
+# Code Review Guidelines
+CODE_REVIEW_GUIDELINES: |
+  - Check for security vulnerabilities
+  - Verify test coverage
+  - Ensure error handling is proper
+  - Check for performance issues
+  - Verify documentation is updated
+  - Ensure code follows project patterns
+
+# Environment and Configuration
+ENVIRONMENT_SETUP: |
+  - Use .env files for local development
+  - Use environment variables for production
+  - Never commit .env files
+  - Use dotenv-safe for required variables
+  - Document all required environment variables
+
+CONFIGURATION_MANAGEMENT: |
+  - Use config objects for different environments
+  - Validate configuration on startup
+  - Use sensible defaults
+  - Document configuration options
+
+# Database Guidelines
+DATABASE_GUIDELINES: |
+  - Use migrations for schema changes
+  - Use transactions for data consistency
+  - Implement proper indexing
+  - Use connection pooling
+  - Monitor query performance
+  - Use prepared statements
+
+# API Guidelines
+API_GUIDELINES: |
+  - Use RESTful conventions
+  - Implement proper HTTP status codes
+  - Use consistent response formats
+  - Implement rate limiting
+  - Use proper authentication
+  - Document API endpoints
+
+# Scraper-Specific Guidelines
+SCRAPER_GUIDELINES: |
+  - Respect robots.txt and rate limits
+  - Use proper user agents and headers
+  - Implement retry logic with exponential backoff
+  - Handle different content types (HTML, JSON, XML)
+  - Implement proper error handling for network failures
+  - Use headless browsers for JavaScript-heavy sites
+  - Implement proper data validation and sanitization
+  - Handle CAPTCHAs and anti-bot measures
+  - Implement proper logging for scraping activities
+  - Use proper data storage patterns for scraped data
+  - **For news sites:** Handle paywalls and subscription content
+  - **For government sites:** Respect FOIA guidelines and data usage policies
+  - **For API sources:** Implement proper authentication and rate limiting
+  - **For RSS feeds:** Handle different feed formats and update frequencies
+  - **For social media:** Respect platform terms of service and API limits
+
+# Scraper Error Handling
+SCRAPER_ERROR_HANDLING: |
+  - NetworkTimeoutError: Handle slow or unresponsive sites
+  - RateLimitError: Implement exponential backoff for rate-limited requests
+  - ContentNotFoundError: Handle missing or moved content
+  - AuthenticationError: Handle login-required content
+  - ParsingError: Handle malformed HTML or JSON responses
+  - CaptchaError: Handle CAPTCHA challenges
+  - BlockedError: Handle IP blocking or bot detection
+  - DataValidationError: Handle invalid or corrupted scraped data 
+
+# Data Processing Guidelines
+DATA_PROCESSING: |
+  - Implement proper data validation and sanitization
+  - Use consistent data formats across sources
+  - Implement data cleaning and normalization
+  - Handle different data sources consistently
+  - Implement proper error handling for data processing
+  - Use proper logging for data processing activities
+  - Implement proper data storage patterns
+  - Handle data quality issues and edge cases
+  - Implement data transformation pipelines
+  - Use proper data modeling for different content types
+
+# Monitoring and Observability
+MONITORING_GUIDELINES: |
+  - Implement proper health checks for all services
+  - Use structured logging for monitoring and alerting
+  - Implement proper metrics collection (scraping success rates, data quality)
+  - Use proper alerting for critical issues (failed scrapes, data quality issues)
+  - Implement proper tracing for distributed scraping operations
+  - Monitor performance and resource usage
+  - Implement proper error tracking and reporting
+  - Use proper dashboards for monitoring scraping operations
+  - Track data freshness and completeness
+  - Monitor rate limiting and API usage
+
+# Deployment and Operations
+DEPLOYMENT_GUIDELINES: |
+  - Use containerization for consistent deployments
+  - Implement proper CI/CD pipelines
+  - Use proper environment-specific configurations
+  - Implement proper rollback strategies
+  - Use proper monitoring and alerting in production
+  - Implement proper backup and recovery strategies
+  - Use proper scaling strategies for high-volume scraping
+  - Implement proper security measures in production
+  - Use proper logging and monitoring in production
+  - Implement proper data retention policies
+
+# Quick Reference
+QUICK_REFERENCE: |
+  Common Commands:
+  - npm test: Run all tests
+  - npm run test:watch: Run tests in watch mode
+  - npm run test:coverage: Run tests with coverage
+  - npm run build: Build the project
+  - npm run lint: Run linting
+  - npm run format: Format code
+
+  Common Patterns:
+  - Logger: import { Logger } from './core/logger'
+  - Test: describe('FeatureName', () => { ... })
+  - Error: throw new ValidationError('message')
+  - Config: import { config } from './config'
+
+# Debugging Guidelines
+DEBUGGING_GUIDELINES: |
+  - Use proper logging levels for debugging
+  - Implement proper error tracking and reporting
+  - Use proper debugging tools and techniques
+  - Implement proper logging for debugging activities
+  - Use proper error handling for debugging
+  - Implement proper debugging patterns
+  - Use proper debugging tools for different environments
+  - Implement proper debugging workflows
+  - Use proper debugging best practices
+  - Implement proper debugging documentation
+
+# Code Quality Guidelines
+CODE_QUALITY_GUIDELINES: |
+  - Use proper code formatting and linting
+  - Implement proper code review processes
+  - Use proper code quality metrics
+  - Implement proper code quality checks
+  - Use proper code quality tools
+  - Implement proper code quality standards
+  - Use proper code quality patterns
+  - Implement proper code quality workflows
+  - Use proper code quality best practices
+  - Implement proper code quality documentation
+
+# Data Quality Guidelines
+DATA_QUALITY_GUIDELINES: |
+  - Implement data validation schemas for each source
+  - Use data quality metrics (completeness, accuracy, consistency)
+  - Implement data deduplication strategies
+  - Handle data freshness and staleness
+  - Implement data quality monitoring and alerting
+  - Use data quality tools and libraries
+  - Implement data quality reporting
+  - Handle data quality issues and edge cases
+  - Implement data quality workflows
+  - Use data quality best practices
+
+# Success Metrics
+SUCCESS_METRICS: |
+  - All tests passing (100% test success rate)
+  - Code coverage above 90% (lines, statements, functions)
+  - Code coverage above 85% (branches)
+  - No linting errors
+  - All security guidelines followed
+  - All performance guidelines followed
+  - All scraper guidelines followed
+  - All data quality guidelines followed
+  - All monitoring guidelines followed
+  - All deployment guidelines followed
+  - All code quality guidelines followed
+  - All debugging guidelines followed
+  - All error handling guidelines followed
+  - All logging guidelines followed
+  - All environment and configuration guidelines followed
+  - All database guidelines followed
+  - All API guidelines followed
+  - All data processing guidelines followed
+  - All code review guidelines followed
+  - All CI PR checklist items completed
+
+# Troubleshooting
+TROUBLESHOOTING: |
+  Common Issues:
+  - Tests failing unexpectedly: Check for environment issues, dependencies, or test data
+  - Build failures: Check TypeScript errors, missing dependencies, or configuration issues
+  - Scraping failures: Check network connectivity, rate limits, or site changes
+  - Data quality issues: Check validation rules, data sources, or processing logic
+  - Performance issues: Check memory usage, database queries, or network requests
+  
+  Debugging Steps:
+  1. Check logs for error messages
+  2. Verify environment configuration
+  3. Check test coverage and quality
+  4. Validate data sources and processing
+  5. Check monitoring and alerting
+  6. Verify security and compliance
+  7. Check deployment and operations

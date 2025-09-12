@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Media.games - Anomaly Detection Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem 0;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .controls {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 300px;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 0.75rem 1rem 0.75rem 2.5rem;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .search-box::before {
+            content: "🔍";
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.1rem;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .filter-select {
+            padding: 0.75rem;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            background: white;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .stats-bar {
+            display: flex;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            flex: 1;
+            min-width: 200px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .table-container {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .table-header {
+            background: #f8f9fa;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #e1e5e9;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .table-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .refresh-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background-color 0.2s;
+        }
+
+        .refresh-btn:hover {
+            background: #5a6fd8;
+        }
+
+        .anomaly-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .anomaly-table th {
+            background: #f8f9fa;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: #555;
+            border-bottom: 2px solid #e1e5e9;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .anomaly-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #f0f0f0;
+            vertical-align: top;
+        }
+
+        .anomaly-table tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .anomaly-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.25rem;
+        }
+
+        .anomaly-description {
+            color: #666;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .severity-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .severity-critical {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .severity-high {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .severity-medium {
+            background: #dbeafe;
+            color: #2563eb;
+        }
+
+        .severity-low {
+            background: #d1fae5;
+            color: #059669;
+        }
+
+        .category-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .status-pending {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .status-validated {
+            background: #d1fae5;
+            color: #059669;
+        }
+
+        .status-invalidated {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .reporter-info {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .reporter-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #667eea;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .reporter-name {
+            font-size: 0.9rem;
+            color: #555;
+        }
+
+        .date-time {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5a6fd8;
+        }
+
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+            border: 1px solid #d1d5db;
+        }
+
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+
+        .tags {
+            display: flex;
+            gap: 0.25rem;
+            flex-wrap: wrap;
+            margin-top: 0.5rem;
+        }
+
+        .tag {
+            background: #e0e7ff;
+            color: #3730a3;
+            padding: 0.2rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 500;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #e1e5e9;
+        }
+
+        .modal-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .modal-body {
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-box {
+                min-width: auto;
+            }
+
+            .stats-bar {
+                flex-direction: column;
+            }
+
+            .anomaly-table {
+                font-size: 0.9rem;
+            }
+
+            .anomaly-table th,
+            .anomaly-table td {
+                padding: 0.75rem 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Media.games</h1>
+        <p>Anomaly Detection Dashboard - What are they not telling you?</p>
+    </div>
+
+    <div class="container">
+        <!-- Controls Section -->
+        <div class="controls">
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Search by trending topics, outlets, or keywords...">
+            </div>
+            <div class="filter-group">
+                <select class="filter-select" id="categoryFilter">
+                    <option value="">All Categories</option>
+                    <option value="saturation">Saturation Event</option>
+                    <option value="ignored-policy">Ignored Policy Proposals</option>
+                    <option value="ignored-rights">Ignored Human Rights Violation</option>
+                    <option value="bias">Media Bias</option>
+                    <option value="omission">Content Omission</option>
+                </select>
+                <select class="filter-select" id="severityFilter">
+                    <option value="">All Severities</option>
+                    <option value="critical">Critical</option>
+                    <option value="high">High</option>
+                    <option value="medium">Medium</option>
+                    <option value="low">Low</option>
+                </select>
+                <select class="filter-select" id="statusFilter">
+                    <option value="">All Statuses</option>
+                    <option value="pending">Pending</option>
+                    <option value="validated">Validated</option>
+                    <option value="invalidated">Invalidated</option>
+                </select>
+                <select class="filter-select" id="outletFilter">
+                    <option value="">All Outlets</option>
+                    <option value="all">All Outlets</option>
+                    <option value="wh-press">WH Press</option>
+                    <option value="left">Left-leaning</option>
+                    <option value="right">Right-leaning</option>
+                    <option value="cnn">CNN</option>
+                    <option value="fox">Fox News</option>
+                    <option value="msnbc">MSNBC</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Stats Bar -->
+        <div class="stats-bar">
+            <div class="stat-card">
+                <div class="stat-number" id="totalAnomalies">47</div>
+                <div class="stat-label">Total Anomalies</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="pendingAnomalies">23</div>
+                <div class="stat-label">Pending Review</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="criticalAnomalies">8</div>
+                <div class="stat-label">Critical Issues</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="validatedAnomalies">15</div>
+                <div class="stat-label">Validated</div>
+            </div>
+        </div>
+
+        <!-- Anomalies Table -->
+        <div class="table-container">
+            <div class="table-header">
+                <div class="table-title">Anomaly Detection Results</div>
+                <button class="refresh-btn" onclick="refreshData()">🔄 Refresh</button>
+            </div>
+            <table class="anomaly-table" id="anomalyTable">
+                <thead>
+                    <tr>
+                        <th>Anomaly</th>
+                        <th>Category</th>
+                        <th>Severity</th>
+                        <th>Reporter</th>
+                        <th>Date/Time</th>
+                        <th>Status</th>
+                        <th>Investigator</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="anomalyTableBody">
+                    <!-- Sample data will be populated by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modal for Anomaly Details -->
+    <div class="modal" id="anomalyModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title" id="modalTitle">Anomaly Details</div>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Content will be populated by JavaScript -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal()">Close</button>
+                <button class="btn btn-primary" onclick="validateAnomaly()">Validate</button>
+                <button class="btn btn-secondary" onclick="invalidateAnomaly()">Invalidate</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sample anomaly data
+        const anomalies = [
+            {
+                id: 1,
+                title: "Climate Change Coverage Gap",
+                description: "Major news outlets completely ignored the latest IPCC report while covering celebrity news extensively",
+                category: "omission",
+                severity: "critical",
+                reporter: "bots@mediagames.ai",
+                date: "2024-01-15T10:30:00Z",
+                status: "pending",
+                investigator: null,
+                tags: ["climate", "ipcc", "environment"],
+                outlets: ["cnn", "fox", "msnbc"],
+                context: "The IPCC report was released on Monday but received minimal coverage compared to celebrity gossip stories."
+            },
+            {
+                id: 2,
+                title: "Healthcare Policy Saturation",
+                description: "Excessive coverage of healthcare policy changes while ignoring infrastructure spending bills",
+                category: "saturation",
+                severity: "high",
+                reporter: "user@example.com",
+                date: "2024-01-14T15:45:00Z",
+                status: "validated",
+                investigator: "Dr. Sarah Chen",
+                tags: ["healthcare", "policy", "infrastructure"],
+                outlets: ["all"],
+                context: "Healthcare stories dominated 60% of news coverage while infrastructure received only 5%."
+            },
+            {
+                id: 3,
+                title: "Human Rights Violation Ignored",
+                description: "Major outlets failed to report on documented human rights violations in conflict zones",
+                category: "ignored-rights",
+                severity: "critical",
+                reporter: "bots@mediagames.ai",
+                date: "2024-01-13T08:20:00Z",
+                status: "pending",
+                investigator: null,
+                tags: ["human-rights", "conflict", "international"],
+                outlets: ["cnn", "msnbc"],
+                context: "UN report documented violations but major outlets prioritized domestic political stories."
+            },
+            {
+                id: 4,
+                title: "Economic Policy Bias",
+                description: "Consistent bias in reporting economic policies favoring certain political narratives",
+                category: "bias",
+                severity: "medium",
+                reporter: "analyst@mediagames.ai",
+                date: "2024-01-12T14:15:00Z",
+                status: "invalidated",
+                investigator: "Prof. Michael Torres",
+                tags: ["economics", "bias", "policy"],
+                outlets: ["fox", "cnn"],
+                context: "Analysis showed systematic bias in economic reporting across multiple outlets."
+            },
+            {
+                id: 5,
+                title: "Technology Regulation Omission",
+                description: "Tech regulation proposals received minimal coverage despite significant public interest",
+                category: "ignored-policy",
+                severity: "high",
+                reporter: "bots@mediagames.ai",
+                date: "2024-01-11T11:30:00Z",
+                status: "validated",
+                investigator: "Alex Johnson",
+                tags: ["technology", "regulation", "policy"],
+                outlets: ["all"],
+                context: "Public interest in tech regulation was high but coverage was disproportionately low."
+            }
+        ];
+
+        let filteredAnomalies = [...anomalies];
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            renderTable();
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            document.getElementById('searchInput').addEventListener('input', filterAnomalies);
+            document.getElementById('categoryFilter').addEventListener('change', filterAnomalies);
+            document.getElementById('severityFilter').addEventListener('change', filterAnomalies);
+            document.getElementById('statusFilter').addEventListener('change', filterAnomalies);
+            document.getElementById('outletFilter').addEventListener('change', filterAnomalies);
+        }
+
+        function filterAnomalies() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const categoryFilter = document.getElementById('categoryFilter').value;
+            const severityFilter = document.getElementById('severityFilter').value;
+            const statusFilter = document.getElementById('statusFilter').value;
+            const outletFilter = document.getElementById('outletFilter').value;
+
+            filteredAnomalies = anomalies.filter(anomaly => {
+                const matchesSearch = !searchTerm || 
+                    anomaly.title.toLowerCase().includes(searchTerm) ||
+                    anomaly.description.toLowerCase().includes(searchTerm) ||
+                    anomaly.tags.some(tag => tag.toLowerCase().includes(searchTerm));
+                
+                const matchesCategory = !categoryFilter || anomaly.category === categoryFilter;
+                const matchesSeverity = !severityFilter || anomaly.severity === severityFilter;
+                const matchesStatus = !statusFilter || anomaly.status === statusFilter;
+                const matchesOutlet = !outletFilter || 
+                    outletFilter === 'all' || 
+                    anomaly.outlets.includes(outletFilter);
+
+                return matchesSearch && matchesCategory && matchesSeverity && matchesStatus && matchesOutlet;
+            });
+
+            renderTable();
+            updateStats();
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('anomalyTableBody');
+            tbody.innerHTML = '';
+
+            filteredAnomalies.forEach(anomaly => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>
+                        <div class="anomaly-title">${anomaly.title}</div>
+                        <div class="anomaly-description">${anomaly.description}</div>
+                        <div class="tags">
+                            ${anomaly.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+                        </div>
+                    </td>
+                    <td><span class="category-badge">${getCategoryLabel(anomaly.category)}</span></td>
+                    <td><span class="severity-badge severity-${anomaly.severity}">${anomaly.severity}</span></td>
+                    <td>
+                        <div class="reporter-info">
+                            <div class="reporter-avatar">${anomaly.reporter.charAt(0).toUpperCase()}</div>
+                            <div class="reporter-name">${anomaly.reporter}</div>
+                        </div>
+                    </td>
+                    <td><div class="date-time">${formatDateTime(anomaly.date)}</div></td>
+                    <td><span class="status-badge status-${anomaly.status}">${anomaly.status}</span></td>
+                    <td><div class="reporter-name">${anomaly.investigator || 'Unassigned'}</div></td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn btn-primary" onclick="viewAnomaly(${anomaly.id})">View</button>
+                            <button class="btn btn-secondary" onclick="assignInvestigator(${anomaly.id})">Assign</button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function updateStats() {
+            const total = filteredAnomalies.length;
+            const pending = filteredAnomalies.filter(a => a.status === 'pending').length;
+            const critical = filteredAnomalies.filter(a => a.severity === 'critical').length;
+            const validated = filteredAnomalies.filter(a => a.status === 'validated').length;
+
+            document.getElementById('totalAnomalies').textContent = total;
+            document.getElementById('pendingAnomalies').textContent = pending;
+            document.getElementById('criticalAnomalies').textContent = critical;
+            document.getElementById('validatedAnomalies').textContent = validated;
+        }
+
+        function getCategoryLabel(category) {
+            const labels = {
+                'saturation': 'Saturation Event',
+                'ignored-policy': 'Ignored Policy',
+                'ignored-rights': 'Ignored Rights',
+                'bias': 'Media Bias',
+                'omission': 'Content Omission'
+            };
+            return labels[category] || category;
+        }
+
+        function formatDateTime(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        }
+
+        function viewAnomaly(id) {
+            const anomaly = anomalies.find(a => a.id === id);
+            if (!anomaly) return;
+
+            document.getElementById('modalTitle').textContent = anomaly.title;
+            document.getElementById('modalBody').innerHTML = `
+                <div style="margin-bottom: 1rem;">
+                    <strong>Description:</strong><br>
+                    ${anomaly.description}
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <strong>Context:</strong><br>
+                    ${anomaly.context}
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <strong>Tags:</strong><br>
+                    ${anomaly.tags.map(tag => `<span class="tag">${tag}</span>`).join(' ')}
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <strong>Affected Outlets:</strong><br>
+                    ${anomaly.outlets.join(', ')}
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <strong>Investigator Notes:</strong><br>
+                    <textarea style="width: 100%; height: 100px; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;" placeholder="Add investigator notes..."></textarea>
+                </div>
+            `;
+
+            document.getElementById('anomalyModal').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('anomalyModal').style.display = 'none';
+        }
+
+        function validateAnomaly() {
+            alert('Anomaly validated successfully!');
+            closeModal();
+        }
+
+        function invalidateAnomaly() {
+            alert('Anomaly invalidated successfully!');
+            closeModal();
+        }
+
+        function assignInvestigator(id) {
+            const investigator = prompt('Enter investigator name:');
+            if (investigator) {
+                const anomaly = anomalies.find(a => a.id === id);
+                if (anomaly) {
+                    anomaly.investigator = investigator;
+                    renderTable();
+                }
+            }
+        }
+
+        function refreshData() {
+            // Simulate data refresh
+            const refreshBtn = document.querySelector('.refresh-btn');
+            refreshBtn.textContent = '🔄 Refreshing...';
+            refreshBtn.disabled = true;
+
+            setTimeout(() => {
+                refreshBtn.textContent = '🔄 Refresh';
+                refreshBtn.disabled = false;
+                alert('Data refreshed successfully!');
+            }, 2000);
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('anomalyModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+    </script>
+</body>
+</html>
